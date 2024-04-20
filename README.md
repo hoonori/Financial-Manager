@@ -19,3 +19,9 @@ Goals(Abstract without details)
 -Report to user via messanger, mail, etc.
 
 -Migrate it so that it can be run mobile.
+
+
+Installed:
+requests
+pandas
+yfinance
