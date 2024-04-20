@@ -1,5 +1,7 @@
-# Welcome to GitHub Desktop!
+# My Finance Manager
 
-This is your README. READMEs are where you can communicate what your project is and how to use it.
+Hello, This is Jihoon Kim's Finanace Manager Program.
 
-Write your name on line 6, save it, and then head back to GitHub Desktop.
+Until I need to actually put some my private datas, I think I will upload it
+
+So that I can keep myself motivated.
