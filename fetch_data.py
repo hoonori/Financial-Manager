@@ -50,7 +50,7 @@ def process_stock_data(data, symbol):
 def fetch_and_save_stock_data_yfinance(symbol):
     stock = yf.Ticker(symbol)
     # '1y' for one year of data, you can customize the period as needed
-    data = stock.history(period="1y")
+    data = stock.history(period="max")
     if data.empty:
         print("Error: No data found for", symbol)
     else:

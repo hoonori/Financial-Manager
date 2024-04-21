@@ -70,8 +70,18 @@ def update_info(symbol):
     if not os.path.exists('raw_datas'):
         print(f'no raw data exists to process')
         return None
+    
+    # Get today's date in the same format as your folder names
+    today_date_folder = datetime.now().strftime("%Y-%m-%d")
+    today_data_folder_path = f'raw_datas/{today_date_folder}'
 
-    raw_data_folders = [f'raw_datas/{folder}' for folder in sorted(os.listdir('raw_datas')) if os.path.isdir(f'raw_datas/{folder}')]
+    # Check if today's date folder exists within 'raw_datas'
+    if not os.path.exists(today_data_folder_path):
+        print(f'No data for today ({today_date_folder}) to process for {symbol}')
+        return None
+
+    # List of folders to process - in this case, only today's date folder
+    raw_data_folders = [today_data_folder_path]
     
     #read data. file path is great. target file is saved as following:
     #orient='records', lines=True, date_format='iso', indent=2
