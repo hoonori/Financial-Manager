@@ -16,6 +16,8 @@ def read_json(filename):
     return data
 
 def write_json(data, filename):
+    """sort data"""
+    data_sorted = sorted(data, key=lambda x: datetime.strptime(x['Date'], '%Y-%m-%d'))
     """Utility function to write JSON data to a file."""
     with open(filename, 'w') as file:
         json.dump(data, file, indent=2)
