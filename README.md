@@ -25,6 +25,9 @@ So that I can keep myself motivated.
 - **Status**: Not Started
 - **Details**:
   - When supported, this will be a life changer.
+  - going to reference: 
+  - https://github.com/youtube-jocoding/koreainvestment-autotrade/tree/main
+  - https://www.youtube.com/watch?v=2Hxfb5HT4kE
 
 ### Connect with GPT or other program to manage strategy
 - **Status**: Not Started
