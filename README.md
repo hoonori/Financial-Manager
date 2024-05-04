@@ -1,3 +1,6 @@
+# Before You Run it
+You need to configure config.yaml. See _config.yaml for reference.
+
 # My Finance Manager
 
 Hello, This is Jihoon Kim's Finanace Manager Program.
@@ -48,3 +51,4 @@ So that I can keep myself motivated.
 requests
 pandas
 yfinance
+PyYAML
