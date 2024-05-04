@@ -1,6 +1,7 @@
 import fetch_data
 import manage_info
 import report
+import trade_domestic
 
 def main():
     report.discord_message("Starting Financial-Manager")
@@ -11,4 +12,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    trade_domestic.simple_korea_autotrade()
+    #main()
