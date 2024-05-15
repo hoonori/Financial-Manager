@@ -1,27 +1,61 @@
 import requests
 from config_loader import config
 import report
+import datetime
+import yaml
+import os
 import time
 import json
 
 APP_KEY = config['APP_KEY']
 APP_SECRET = config['APP_SECRET']
-ACCESS_TOKEN = ""
+ACCESS_TOKEN = "default"
 CANO = config['CANO']
 ACNT_PRDT_CD = config['ACNT_PRDT_CD']
 URL_BASE = config['URL_BASE']
+TOKEN_FILE = 'token.yaml'
+
+def save_token(token):
+    data = {
+        'access_token': token,
+        'timestamp': time.time()
+    }
+    with open(TOKEN_FILE, 'w') as file:
+        yaml.dump(data, file)
+
+def load_token():
+    if os.path.exists(TOKEN_FILE):
+        with open(TOKEN_FILE, 'r') as file:
+            data = yaml.load(file, Loader=yaml.FullLoader)
+            return data['access_token'], data['timestamp']
+    return None, None
 
 def get_access_token():
     print("get access token")
-    headers = {"content-type":"application/json"}
-    body = {"grant_type":"client_credentials",
-    "appkey":APP_KEY, 
-    "appsecret":APP_SECRET}
-    PATH = "oauth2/tokenP"
-    URL = f"{URL_BASE}/{PATH}"
-    res = requests.post(URL, headers=headers, data=json.dumps(body))
-    print(res)
-    ACCESS_TOKEN = res.json()["access_token"]
+    global ACCESS_TOKEN
+    token, timestamp = load_token()
+    if token and time.time() - timestamp < 3600:  # 1 hour = 3600 seconds
+        ACCESS_TOKEN = token
+        print("Using cached access token")
+    else:
+        headers = {"content-type": "application/json"}
+        body = {
+            "grant_type": "client_credentials",
+            "appkey": APP_KEY,
+            "appsecret": APP_SECRET
+        }
+        PATH = "oauth2/tokenP"
+        URL = f"{URL_BASE}/{PATH}"
+        res = requests.post(URL, headers=headers, data=json.dumps(body))
+        if res.status_code == 200:
+            ACCESS_TOKEN = res.json().get("access_token")
+            if ACCESS_TOKEN:
+                save_token(ACCESS_TOKEN)
+                print("New access token requested and saved")
+            else:
+                raise Exception("Failed to retrieve access token")
+        else:
+            raise Exception("Failed to retrieve access token")
     return ACCESS_TOKEN
 
 def hashkey(datas):
@@ -40,6 +74,7 @@ def hashkey(datas):
 
 def get_current_price(code="000660"):
     """현재가 조회"""
+    global ACCESS_TOKEN
     PATH = "uapi/domestic-stock/v1/quotations/inquire-price"
     URL = f"{URL_BASE}/{PATH}"
     headers = {"Content-Type":"application/json", 
@@ -56,6 +91,7 @@ def get_current_price(code="000660"):
 
 def get_target_price(code="000660"):
     """변동성 돌파 전략으로 매수 목표가 조회"""
+    global ACCESS_TOKEN
     PATH = "uapi/domestic-stock/v1/quotations/inquire-daily-price"
     URL = f"{URL_BASE}/{PATH}"
     headers = {"Content-Type":"application/json", 
@@ -78,6 +114,7 @@ def get_target_price(code="000660"):
 
 def get_stock_balance():
     print("get_stock_balance")
+    global ACCESS_TOKEN
     PATH = "uapi/domestic-stock/v1/trading/inquire-balance"
     URL = f"{URL_BASE}/{PATH}"
     headers = {"Content-Type":"application/json", 
@@ -121,6 +158,7 @@ def get_stock_balance():
 
 def get_balance():
     print("view my account")
+    global ACCESS_TOKEN
     PATH = "uapi/domestic-stock/v1/trading/inquire-psbl-order"
     URL = f"{URL_BASE}/{PATH}"
     headers = {"Content-Type":"application/json", 
@@ -140,12 +178,20 @@ def get_balance():
         "OVRS_ICLD_YN": "Y"
     }
     res = requests.get(URL, headers=headers, params=params)
-    print(res)
-    cash = res.json()['output']['ord_psbl_cash']
-    report.discord_message(f"주문 가능 현금 잔고: {cash}원")
-    return int(cash)
+    if res.status_code == 200:
+        try:
+            cash = res.json()['output']['ord_psbl_cash']
+            report.discord_message(f"주문 가능 현금 잔고: {cash}원")
+            return int(cash)
+        except KeyError as e:
+            report.discord_message(f"[오류 발생] KeyError: {e}")
+            return None
+    else:
+        report.discord_message(f"[오류 발생] HTTP {res.status_code}: {res.text}")
+        return None
 
 def buy(code="000660", qty="1"):
+    global ACCESS_TOKEN
     print("buy stock in market price")
     PATH = "uapi/domestic-stock/v1/trading/order-cash"
     URL = f"{URL_BASE}/{PATH}"
@@ -174,6 +220,7 @@ def buy(code="000660", qty="1"):
         return False
 
 def sell(code="000660", qty="1"):
+    global ACCESS_TOKEN
     print("sell stock in market price")
     PATH = "uapi/domestic-stock/v1/trading/order-cash"
     URL = f"{URL_BASE}/{PATH}"
@@ -205,7 +252,11 @@ def sell(code="000660", qty="1"):
 def simple_korea_autotrade():
     try:
         print("simple_korea_autotrade")
+        global ACCESS_TOKEN
         ACCESS_TOKEN = get_access_token()
+        if not ACCESS_TOKEN:
+            report.discord_message("[오류 발생] Failed to retrieve access token")
+            return
 
         symbol_list = ["000660", "086790", "005930", "010120", "033100", "373220", "175330", "012450", "005490", "352820", "035420", "103140"] # 매수 희망 종목 리스트
         #000660(하이닉스)
